@@ -1,0 +1,14 @@
+name: Test Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-runner:
+    runs-on: [self-hosted, docker, linux, portainer]
+
+    steps:
+      - name: Echo test
+        run: echo "✅ Workflow is working"
