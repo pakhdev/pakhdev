@@ -30,10 +30,22 @@ jobs:
 
       - name: Get artifact download URL and notify
         run: |
+          validate_json() {
+            local json="$1"
+            echo "$json" | jq empty 2>/dev/null
+            if [ $? -ne 0 ]; then
+              echo "❌ Invalid JSON detected:"
+              echo "$json" | jq . 2>/dev/null || echo "$json"
+              exit 1
+            fi
+          }
+
           ARTIFACT_ID=$(gh api /repos/${{ github.repository }}/actions/artifacts \
             | jq '.artifacts[] | select(.name=="pakhdev-artifact") | .id')
 
           DOWNLOAD_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
+
+          echo "📦 Artifact URL: $DOWNLOAD_URL"
 
           JSON_PAYLOAD=$(jq -n \
             --arg topic "deploy.query" \
@@ -43,9 +55,10 @@ jobs:
             --arg artifact_url "$DOWNLOAD_URL" \
             '{topic: $topic, repository: $repository, branch: $branch, commit: $commit, artifact_url: $artifact_url}')
 
+          validate_json "$JSON_PAYLOAD"
+
           curl -X POST "${{ secrets.DEPLOY_URL }}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD"
-
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
