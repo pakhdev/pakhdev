@@ -38,6 +38,7 @@ jobs:
           curl -X POST "${{ secrets.DEPLOY_URL }}" \
             -H "Content-Type: application/json" \
             -d '{
+              "topic": "deploy.query",
               "repository": "${{ github.repository }}",
               "branch": "${{ github.ref_name }}",
               "commit": "${{ github.sha }}",
