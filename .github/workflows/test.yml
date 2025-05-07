@@ -2,23 +2,10 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/workflows/**'
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/workflows/**'
 
 jobs:
   build:
     runs-on: [self-hosted, docker, linux, portainer]
-
-    env:
-      BUILD_DIR: dist
-      ZIP_NAME: pakhdev-artifact.zip
 
     steps:
       - name: Checkout repository
@@ -35,20 +22,16 @@ jobs:
       - name: Build with Vite
         run: npm run build
 
-      - name: Archive build output
-        run: |
-          zip -r ${{ env.ZIP_NAME }} ${{ env.BUILD_DIR }}
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vite-build
-          path: ${{ env.ZIP_NAME }}
+          name: pakhdev-artifact
+          path: dist/
 
       - name: Get artifact download URL and notify
         run: |
           ARTIFACT_ID=$(gh api /repos/${{ github.repository }}/actions/artifacts \
-            | jq '.artifacts[] | select(.name=="vite-build") | .id')
+            | jq '.artifacts[] | select(.name=="pakhdev-artifact") | .id')
 
           DOWNLOAD_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
 
