@@ -35,16 +35,17 @@ jobs:
 
           DOWNLOAD_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
 
-          JSON_PAYLOAD=$(printf '{
-            "topic": "deploy.query",
-            "repository": "%s",
-            "branch": "%s",
-            "commit": "%s",
-            "artifact_url": "%s"
-          }' "${{ github.repository }}" "${{ github.ref_name }}" "${{ github.sha }}" "$DOWNLOAD_URL")
+          JSON_PAYLOAD=$(jq -n \
+            --arg topic "deploy.query" \
+            --arg repository "${{ github.repository }}" \
+            --arg branch "${{ github.ref_name }}" \
+            --arg commit "${{ github.sha }}" \
+            --arg artifact_url "$DOWNLOAD_URL" \
+            '{topic: $topic, repository: $repository, branch: $branch, commit: $commit, artifact_url: $artifact_url}')
 
           curl -X POST "${{ secrets.DEPLOY_URL }}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD"
+
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
