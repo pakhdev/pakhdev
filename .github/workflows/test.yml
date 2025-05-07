@@ -42,7 +42,7 @@ jobs:
               "repository": "${{ github.repository }}",
               "branch": "${{ github.ref_name }}",
               "commit": "${{ github.sha }}",
-              "artifact_url": "$DOWNLOAD_URL"
+              "artifact_url": "'$DOWNLOAD_URL'"
             }'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
