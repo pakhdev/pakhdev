@@ -34,18 +34,23 @@ jobs:
             local json="$1"
             echo "$json" | jq empty 2>/dev/null
             if [ $? -ne 0 ]; then
-              echo "❌ Invalid JSON detected:"
+              echo "❌ Invalid JSON payload:"
               echo "$json" | jq . 2>/dev/null || echo "$json"
               exit 1
             fi
           }
 
+          echo "🔍 Fetching latest artifact ID..."
           ARTIFACT_ID=$(gh api /repos/${{ github.repository }}/actions/artifacts \
-            | jq '.artifacts[] | select(.name=="pakhdev-artifact") | .id')
+            | jq -r '[.artifacts[] | select(.name=="pakhdev-artifact")] | sort_by(.created_at) | last | .id')
+
+          if [ -z "$ARTIFACT_ID" ]; then
+            echo "❌ Artifact not found"
+            exit 1
+          fi
 
           DOWNLOAD_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
-
-          echo "📦 Artifact URL: $DOWNLOAD_URL"
+          echo "📦 Artifact download URL: $DOWNLOAD_URL"
 
           JSON_PAYLOAD=$(jq -n \
             --arg topic "deploy.query" \
@@ -57,6 +62,7 @@ jobs:
 
           validate_json "$JSON_PAYLOAD"
 
+          echo "📤 Sending deployment payload..."
           curl -X POST "${{ secrets.DEPLOY_URL }}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD"
